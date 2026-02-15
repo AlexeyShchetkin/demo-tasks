@@ -1,0 +1,302 @@
+openapi: 3.0.3
+info:
+  title: Tasks API
+  version: 1.0.0
+  description: |
+    API для управления задачами
+servers:
+  - url: http://localhost:8000/api/v1
+    description: Локальный сервер разработки
+
+paths:
+  /tasks:
+    get:
+      summary: Получить список всех задач
+      tags:
+        - Tasks
+      responses:
+        '200':
+          description: Успешный ответ
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Task'
+              example:
+                - id: 1
+                  title: Завершить проект
+                  description: Необходимо завершить разработку проекта
+                  status: pending
+                  created_at: '2024-01-01T12:00:00+00:00'
+                  updated_at: '2024-01-01T12:00:00+00:00'
+                - id: 2
+                  title: Провести тестирование
+                  description: Протестировать все функции
+                  status: in_progress
+                  created_at: '2024-01-02T10:00:00+00:00'
+                  updated_at: '2024-01-02T14:00:00+00:00'
+
+    post:
+      summary: Создать новую задачу
+      tags:
+        - Tasks
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/StoreTaskRequest'
+      responses:
+        '201':
+          description: Задача успешно создана
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Task'
+              example:
+                id: 1
+                title: Завершить проект
+                description: Необходимо завершить разработку проекта
+                status: pending
+                created_at: '2024-01-01T12:00:00+00:00'
+                updated_at: '2024-01-01T12:00:00+00:00'
+        '422':
+          description: Ошибка валидации
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationError'
+              example:
+                message: The given data was invalid.
+                errors:
+                  title:
+                    - The title field is required.
+
+  /tasks/{id}:
+    get:
+      summary: Получить задачу по ID
+      tags:
+        - Tasks
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: ID задачи
+          schema:
+            type: integer
+            example: 1
+      responses:
+        '200':
+          description: Успешный ответ
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Task'
+              example:
+                id: 1
+                title: Завершить проект
+                description: Необходимо завершить разработку проекта
+                status: pending
+                created_at: '2024-01-01T12:00:00+00:00'
+                updated_at: '2024-01-01T12:00:00+00:00'
+        '404':
+          description: Задача не найдена
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                message: No query results for model [App\Models\Task] 999
+
+    put:
+      summary: Обновить задачу
+      tags:
+        - Tasks
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: ID задачи
+          schema:
+            type: integer
+            example: 1
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateTaskRequest'
+      responses:
+        '200':
+          description: Задача успешно обновлена
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Task'
+              example:
+                id: 1
+                title: Завершить проект
+                description: Необходимо завершить разработку проекта
+                status: in_progress
+                created_at: '2024-01-01T12:00:00+00:00'
+                updated_at: '2024-01-01T15:00:00+00:00'
+        '404':
+          description: Задача не найдена
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                message: No query results for model [App\Models\Task] 999
+        '422':
+          description: Ошибка валидации
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationError'
+              example:
+                message: The given data was invalid.
+                errors:
+                  title:
+                    - The title field is required.
+
+    delete:
+      summary: Удалить задачу
+      tags:
+        - Tasks
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: ID задачи
+          schema:
+            type: integer
+            example: 1
+      responses:
+        '204':
+          description: Задача успешно удалена
+        '404':
+          description: Задача не найдена
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                message: No query results for model [App\Models\Task] 999
+
+components:
+  schemas:
+    Task:
+      type: object
+      properties:
+        id:
+          type: integer
+          description: Уникальный идентификатор задачи
+          example: 1
+        title:
+          type: string
+          description: Название задачи
+          maxLength: 255
+          example: Завершить проект
+        description:
+          type: string
+          nullable: true
+          description: Описание задачи
+          example: Необходимо завершить разработку проекта
+        status:
+          type: string
+          enum:
+            - pending
+            - in_progress
+            - completed
+          description: Статус задачи
+          example: pending
+        created_at:
+          type: string
+          format: date-time
+          description: Дата и время создания
+          example: '2024-01-01T12:00:00+00:00'
+        updated_at:
+          type: string
+          format: date-time
+          description: Дата и время последнего обновления
+          example: '2024-01-01T12:00:00+00:00'
+
+    StoreTaskRequest:
+      type: object
+      required:
+        - title
+      properties:
+        title:
+          type: string
+          maxLength: 255
+          description: Название задачи
+          example: Завершить проект
+        description:
+          type: string
+          nullable: true
+          description: Описание задачи
+          example: Необходимо завершить разработку проекта
+        status:
+          type: string
+          enum:
+            - pending
+            - in_progress
+            - completed
+          nullable: true
+          description: Статус задачи
+          example: pending
+
+    UpdateTaskRequest:
+      type: object
+      properties:
+        title:
+          type: string
+          maxLength: 255
+          description: Название задачи
+          example: Завершить проект
+        description:
+          type: string
+          nullable: true
+          description: Описание задачи
+          example: Необходимо завершить разработку проекта
+        status:
+          type: string
+          enum:
+            - pending
+            - in_progress
+            - completed
+          description: Статус задачи
+          example: in_progress
+
+    Error:
+      type: object
+      properties:
+        message:
+          type: string
+          description: Сообщение об ошибке
+          example: No query results for model [App\Models\Task] 999
+
+    ValidationError:
+      type: object
+      properties:
+        message:
+          type: string
+          description: Общее сообщение об ошибке валидации
+          example: The given data was invalid.
+        errors:
+          type: object
+          description: Детальные ошибки валидации по полям
+          additionalProperties:
+            type: array
+            items:
+              type: string
+          example:
+            title:
+              - The title field is required.
+
+tags:
+  - name: Tasks
+    description: Операции с задачами
+

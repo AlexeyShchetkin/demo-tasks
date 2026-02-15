@@ -6,6 +6,7 @@ use App\Enums\TaskStatus;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreTaskRequest;
 use App\Http\Requests\UpdateTaskRequest;
+use App\Http\Resources\TaskResource;
 use App\Models\Task;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Response;
@@ -15,7 +16,7 @@ class TaskController extends Controller
     public function index(): JsonResponse
     {
         $tasks = Task::all();
-        return response()->json($tasks, Response::HTTP_OK);
+        return TaskResource::collection($tasks)->response();
     }
 
     public function store(StoreTaskRequest $request): JsonResponse
@@ -28,12 +29,12 @@ class TaskController extends Controller
             'status' => $validated['status'] ?? TaskStatus::PENDING->value,
         ]);
 
-        return response()->json($task, Response::HTTP_CREATED);
+        return (new TaskResource($task))->response()->setStatusCode(Response::HTTP_CREATED);
     }
 
     public function show(Task $task): JsonResponse
     {
-        return response()->json($task, Response::HTTP_OK);
+        return (new TaskResource($task))->response();
     }
 
     public function update(UpdateTaskRequest $request, Task $task): JsonResponse
@@ -41,7 +42,7 @@ class TaskController extends Controller
         $validated = $request->validated();
         $task->update($validated);
 
-        return response()->json($task, Response::HTTP_OK);
+        return (new TaskResource($task))->response();
     }
 
     public function destroy(Task $task): JsonResponse|Response
